@@ -1,0 +1,26 @@
+{
+    "name": "প্রো ক্যালকুলেটর",
+    "short_name": "ক্যালকুলেটর",
+    "description": "নিওমরফিক ডিজাইনের প্রো ক্যালকুলেটর — সায়েন্টিফিক মোড, কনভার্টার ও হিস্ট্রি সহ। অফলাইনেও চলে!",
+    "lang": "bn",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#e9eaee",
+    "theme_color": "#e9eaee",
+    "icons": [
+        {
+            "src": "icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
