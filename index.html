@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>প্রো ক্যালকুলেটর</title>
+
+    <!-- ===== PWA সেটিংস (অফলাইনের জন্য) ===== -->
+    <meta name="theme-color" content="#e9eaee">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="প্রো ক্যালকুলেটর">
+
     <!-- Icon Library Link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -452,6 +463,15 @@
         function formatResult(num) {
             // Avoids floating point inaccuracies like 0.1 + 0.2
             return parseFloat(num.toPrecision(15));
+        }
+
+        /* ===== Service Worker রেজিস্ট্রেশন (অফলাইন মোড) ===== */
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('✅ অফলাইন মোড চালু হয়েছে'))
+                    .catch(err => console.log('❌ Service Worker রেজিস্টার হয়নি:', err));
+            });
         }
         // JavaScript কোড শেষ
     </script>
