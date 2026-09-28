@@ -2,26 +2,36 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>প্রো ক্যালকুলেটর</title>
     <!-- Icon Library Link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         /* CSS কোড শুরু */
         :root {
-            --dark-bg: #1a1a1a;
-            --button-grey: rgba(255, 255, 255, 0.15);
-            --button-hover: rgba(255, 255, 255, 0.3);
+            --bg: #e9eaee;
+            --text-dark: #17181a;
+            --text-grey: #6d6f75;
             --orange: #ff9500;
+        }
+
+        /* কপি/সিলেক্ট বন্ধ করার CSS */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
         body, html {
             height: 100%;
             margin: 0;
             overflow: hidden;
-            background-color: #000;
+            background-color: var(--bg);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .calculator-wrapper {
@@ -30,7 +40,7 @@
             height: 100%;
             max-width: 414px;
             margin: auto;
-            background-color: #000;
+            background-color: var(--bg);
             display: flex;
             flex-direction: column;
         }
@@ -40,7 +50,7 @@
             display: flex;
             justify-content: space-between;
             padding: 15px 20px;
-            color: #b0b0b0;
+            color: #4a4b50;
             font-size: 20px;
         }
         .header i, .header span {
@@ -51,7 +61,7 @@
             align-items: center;
             justify-content: center;
         }
-        .header span { font-weight: bold; } /* For scientific icon */
+        .header span { font-weight: bold; }
 
         /* Display */
         .display-container {
@@ -60,7 +70,7 @@
             flex-direction: column;
             justify-content: flex-end;
             text-align: right;
-            color: #fff;
+            color: var(--text-dark);
             padding: 10px 25px;
             word-wrap: break-word;
             word-break: break-all;
@@ -69,12 +79,13 @@
         #expression {
             min-height: 60px;
             font-size: 50px;
-            font-weight: 500;
+            font-weight: 600;
         }
         #result {
             min-height: 40px;
             font-size: 38px;
-            color: #b0b0b0;
+            font-weight: 600;
+            color: var(--text-grey);
         }
 
         /* Button Grids */
@@ -93,22 +104,56 @@
             display: none; /* Initially hidden */
         }
 
+        /* ===== নিওমরফিক বাটন স্টাইল ===== */
         .btn {
             border: none;
             border-radius: 50%;
-            color: #fff;
+            color: var(--text-dark);
             font-size: 28px;
+            font-weight: 700; /* মোটা ও গাঢ় লেখা */
             cursor: pointer;
-            background-color: var(--button-grey);
-            transition: background-color 0.2s;
             aspect-ratio: 1 / 1;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: box-shadow 0.15s, transform 0.1s;
         }
-        .btn:active { background-color: var(--button-hover); }
 
-        .equals { background-color: var(--orange); }
+        /* সংখ্যার বাটন — প্রায় সাদা, নরম ছায়া */
+        .btn-num {
+            background: linear-gradient(145deg, #fdfdfe, #eceef2);
+            box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.13),
+                        -5px -5px 10px rgba(255, 255, 255, 0.95),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.9);
+        }
+
+        /* ফাংশন/অপারেটর বাটন — একটু গাঢ় ধূসর */
+        .btn-func {
+            background: linear-gradient(145deg, #e3e5ea, #d3d5db);
+            box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.13),
+                        -5px -5px 10px rgba(255, 255, 255, 0.9),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.7);
+        }
+
+        /* চাপলে বাটন ভেতরে চেপে যাবে */
+        .btn:active {
+            box-shadow: inset 4px 4px 10px rgba(0, 0, 0, 0.15),
+                        inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+            transform: scale(0.96);
+        }
+
+        /* = বাটন — কমলা গ্রেডিয়েন্ট */
+        .btn.equals {
+            background: linear-gradient(145deg, #ffab52, #ff8a00);
+            color: #ffffff;
+            font-weight: 800;
+            box-shadow: 5px 5px 14px rgba(255, 138, 0, 0.45),
+                        -3px -3px 8px rgba(255, 255, 255, 0.6);
+        }
+        .btn.equals:active {
+            box-shadow: inset 4px 4px 10px rgba(170, 90, 0, 0.45);
+            transform: scale(0.96);
+        }
 
         /* Full-screen Overlays */
         .overlay {
@@ -117,7 +162,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--dark-bg);
+            background-color: var(--bg);
             z-index: 10;
             display: none;
             flex-direction: column;
@@ -127,8 +172,9 @@
         .overlay-header {
             display: flex;
             align-items: center;
-            color: #fff;
+            color: var(--text-dark);
             font-size: 24px;
+            font-weight: 700;
             padding: 15px;
         }
         .overlay-header i { cursor: pointer; margin-right: 20px; }
@@ -140,24 +186,23 @@
             padding: 20px;
         }
         .converter-btn {
-            background-color: #2c2c2c;
-            border-radius: 15px;
-            aspect-ratio: 1/1;
+            border-radius: 20px;
             flex-direction: column;
             gap: 8px;
             font-size: 16px;
+            font-weight: 700;
         }
         
         /* History Styles */
         #history-panel .history-item {
-            color: #fff;
+            color: var(--text-dark);
             padding: 15px;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid #d8dade;
             text-align: right;
         }
-        #history-panel .history-expr { font-size: 18px; color: #b0b0b0; }
-        #history-panel .history-res { font-size: 24px; }
-        #history-panel .no-history { color: #888; text-align: center; margin-top: 50px; font-size: 18px;}
+        #history-panel .history-expr { font-size: 18px; color: var(--text-grey); }
+        #history-panel .history-res { font-size: 24px; font-weight: 700; }
+        #history-panel .no-history { color: #9a9ca2; text-align: center; margin-top: 50px; font-size: 18px; }
         /* CSS কোড শেষ */
     </style>
 </head>
@@ -180,39 +225,39 @@
 
             <div class="buttons-container">
                 <div id="scientific-panel" class="buttons scientific-buttons">
-                    <button class="btn" onclick="appendFunction('sin(')">sin</button>
-                    <button class="btn" onclick="appendFunction('cos(')">cos</button>
-                    <button class="btn" onclick="appendFunction('tan(')">tan</button>
-                    <button class="btn" onclick="appendCharacter('!')">n!</button>
-                    <button class="btn" onclick="appendCharacter('(')">(</button>
-                    <button class="btn" onclick="appendCharacter(')')">)</button>
-                    <button class="btn" onclick="appendCharacter('√(')">√</button>
-                    <button class="btn" onclick="appendCharacter('^')">^</button>
+                    <button class="btn btn-func" onclick="appendFunction('sin(')">sin</button>
+                    <button class="btn btn-func" onclick="appendFunction('cos(')">cos</button>
+                    <button class="btn btn-func" onclick="appendFunction('tan(')">tan</button>
+                    <button class="btn btn-func" onclick="appendCharacter('!')">n!</button>
+                    <button class="btn btn-func" onclick="appendCharacter('(')">(</button>
+                    <button class="btn btn-func" onclick="appendCharacter(')')">)</button>
+                    <button class="btn btn-func" onclick="appendCharacter('√(')">√</button>
+                    <button class="btn btn-func" onclick="appendCharacter('^')">^</button>
                 </div>
                 <div class="buttons">
-                    <button class="btn" onclick="clearDisplay()">AC</button>
-                    <button class="btn" onclick="appendCharacter('%')">%</button>
-                    <button class="btn" onclick="deleteLast()">⌫</button>
-                    <button class="btn" onclick="appendOperator('÷')">÷</button>
+                    <button class="btn btn-func" onclick="clearDisplay()">AC</button>
+                    <button class="btn btn-func" onclick="appendCharacter('%')">%</button>
+                    <button class="btn btn-func" onclick="deleteLast()">⌫</button>
+                    <button class="btn btn-func" onclick="appendOperator('÷')">÷</button>
                     
-                    <button class="btn" onclick="appendCharacter('7')">7</button>
-                    <button class="btn" onclick="appendCharacter('8')">8</button>
-                    <button class="btn" onclick="appendCharacter('9')">9</button>
-                    <button class="btn" onclick="appendOperator('×')">×</button>
+                    <button class="btn btn-num" onclick="appendCharacter('7')">7</button>
+                    <button class="btn btn-num" onclick="appendCharacter('8')">8</button>
+                    <button class="btn btn-num" onclick="appendCharacter('9')">9</button>
+                    <button class="btn btn-func" onclick="appendOperator('×')">×</button>
                     
-                    <button class="btn" onclick="appendCharacter('4')">4</button>
-                    <button class="btn" onclick="appendCharacter('5')">5</button>
-                    <button class="btn" onclick="appendCharacter('6')">6</button>
-                    <button class="btn" onclick="appendOperator('-')">−</button>
+                    <button class="btn btn-num" onclick="appendCharacter('4')">4</button>
+                    <button class="btn btn-num" onclick="appendCharacter('5')">5</button>
+                    <button class="btn btn-num" onclick="appendCharacter('6')">6</button>
+                    <button class="btn btn-func" onclick="appendOperator('-')">−</button>
                     
-                    <button class="btn" onclick="appendCharacter('1')">1</button>
-                    <button class="btn" onclick="appendCharacter('2')">2</button>
-                    <button class="btn" onclick="appendCharacter('3')">3</button>
-                    <button class="btn" onclick="appendOperator('+')">+</button>
+                    <button class="btn btn-num" onclick="appendCharacter('1')">1</button>
+                    <button class="btn btn-num" onclick="appendCharacter('2')">2</button>
+                    <button class="btn btn-num" onclick="appendCharacter('3')">3</button>
+                    <button class="btn btn-func" onclick="appendOperator('+')">+</button>
 
-                    <button class="btn" onclick="appendCharacter('00')">00</button>
-                    <button class="btn" onclick="appendCharacter('0')">0</button>
-                    <button class="btn" onclick="appendCharacter('.')">.</button>
+                    <button class="btn btn-num" onclick="appendCharacter('00')">00</button>
+                    <button class="btn btn-num" onclick="appendCharacter('0')">0</button>
+                    <button class="btn btn-num" onclick="appendCharacter('.')">.</button>
                     <button class="btn equals" onclick="finalizeResult()">=</button>
                 </div>
             </div>
@@ -226,12 +271,12 @@
             </div>
             <div class="overlay-content">
                 <div class="buttons">
-                    <button class="btn converter-btn"><i class="fa-solid fa-yen-sign"></i>Currency</button>
-                    <button class="btn converter-btn"><i class="fa-solid fa-ruler-horizontal"></i>Length</button>
-                    <button class="btn converter-btn"><i class="fa-solid fa-vector-square"></i>Area</button>
-                    <button class="btn converter-btn"><i class="fa-solid fa-cube"></i>Volume</button>
-                    <button class="btn converter-btn"><i class="fa-solid fa-weight-hanging"></i>Weight</button>
-                    <button class="btn converter-btn"><i class="fa-solid fa-temperature-half"></i>Temperature</button>
+                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-yen-sign"></i>Currency</button>
+                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-ruler-horizontal"></i>Length</button>
+                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-vector-square"></i>Area</button>
+                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-cube"></i>Volume</button>
+                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-weight-hanging"></i>Weight</button>
+                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-temperature-half"></i>Temperature</button>
                 </div>
             </div>
         </div>
@@ -250,6 +295,43 @@
 
     <script>
         // JavaScript কোড শুরু
+
+        /* ===== কপি ও জুম সম্পূর্ণ বন্ধ করার কোড ===== */
+
+        // রাইট ক্লিক বন্ধ
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // কপি, কাট, সিলেক্ট, ড্র্যাগ বন্ধ
+        document.addEventListener('copy', e => e.preventDefault());
+        document.addEventListener('cut', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
+
+        // পিঞ্চ জুম বন্ধ (iOS Safari)
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('gesturechange', e => e.preventDefault());
+        document.addEventListener('gestureend', e => e.preventDefault());
+
+        // মাল্টি-টাচ জুম বন্ধ
+        document.addEventListener('touchmove', e => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+
+        // Ctrl + মাউস স্ক্রল জুম বন্ধ
+        document.addEventListener('wheel', e => {
+            if (e.ctrlKey) e.preventDefault();
+        }, { passive: false });
+
+        // কীবোর্ড শর্টকাট বন্ধ
+        document.addEventListener('keydown', e => {
+            const k = e.key.toLowerCase();
+            if (e.ctrlKey && ['c', 'x', 's', 'u', 'p', '+', '-', '=', '0'].includes(k)) e.preventDefault();
+            if (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(k)) e.preventDefault();
+            if (e.key === 'F12') e.preventDefault();
+        });
+
+        /* ===== ক্যালকুলেটর লজিক ===== */
+
         const expressionDiv = document.getElementById('expression');
         const resultDiv = document.getElementById('result');
         const sciPanel = document.getElementById('scientific-panel');
@@ -351,7 +433,7 @@
             formatted = formatted.replace(/\^/g, '**');
             // Handle percentage logic
             formatted = formatted.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
-            // Handle trig functions with degrees
+            // Handle trig functions
             ['sin', 'cos', 'tan'].forEach(f => {
                 const regex = new RegExp(`${f}\\(`, 'g');
                 formatted = formatted.replace(regex, `Math.${f}(`);
