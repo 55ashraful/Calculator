@@ -3,7 +3,7 @@
    অফলাইনে চালানোর জন্য সব ফাইল ক্যাশ করে রাখে
 ============================================ */
 
-const CACHE_NAME = 'pro-calculator-v2.0';
+const CACHE_NAME = 'pro-calculator-v3.0';
 
 // যেসব ফাইল অফলাইনের জন্য ক্যাশ হবে
 const ASSETS_TO_CACHE = [
