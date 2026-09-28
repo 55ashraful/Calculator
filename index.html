@@ -24,6 +24,7 @@
             --text-dark: #17181a;
             --text-grey: #6d6f75;
             --orange: #ff9500;
+            --fw-op: 1;
         }
 
         /* কপি/সিলেক্ট বন্ধ করার CSS */
@@ -34,6 +35,10 @@
             user-select: none;
             -webkit-touch-callout: none;
         }
+        input, select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
 
         body, html {
             height: 100%;
@@ -43,15 +48,83 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
+            overscroll-behavior: none;
         }
 
         .calculator-wrapper {
             position: relative;
             width: 100%;
             height: 100%;
+            height: 100dvh;
             max-width: 414px;
-            margin: auto;
+            margin: 0 auto;
             background-color: var(--bg);
+            display: flex;
+            flex-direction: column;
+            transition: opacity .2s;
+        }
+
+        /* ===== ফ্লোটিং উইন্ডো মোড ===== */
+        .calculator-wrapper.fw-mode {
+            position: fixed;
+            width: min(82vw, 345px);
+            max-width: none;
+            height: auto;
+            max-height: 94vh;
+            left: 50%;
+            top: 7vh;
+            transform: translateX(-50%);
+            border-radius: 30px;
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            z-index: 60;
+            opacity: var(--fw-op);
+            padding: 30px 0 16px;
+        }
+        #fw-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background: linear-gradient(160deg, #5a6e5c, #3a5040 55%, #24382c);
+            opacity: 0;
+            visibility: hidden;
+            transition: .25s;
+        }
+        #fw-backdrop.show { opacity: 1; visibility: visible; }
+        #fwTop {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 28px;
+            align-items: center;
+            justify-content: center;
+            color: #9a9ca2;
+            letter-spacing: 6px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: move;
+            z-index: 5;
+            touch-action: none;
+        }
+        #fwHandle {
+            display: none;
+            position: absolute;
+            bottom: 5px; left: 50%;
+            transform: translateX(-50%);
+            width: 90px; height: 5px;
+            border-radius: 3px;
+            background: #c4c6cc;
+            cursor: move;
+            z-index: 5;
+            touch-action: none;
+        }
+        .fw-mode #fwTop { display: flex; }
+        .fw-mode #fwHandle { display: block; }
+
+        .calculator-main {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
             display: flex;
             flex-direction: column;
         }
@@ -72,56 +145,86 @@
             align-items: center;
             justify-content: center;
         }
-        .header span { font-weight: bold; }
+        #sci-btn {
+            flex-direction: column;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.15;
+        }
+        #sci-btn.active { color: var(--orange); }
 
         /* Display */
         .display-container {
             flex: 1;
+            min-height: 0;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             text-align: right;
             color: var(--text-dark);
             padding: 10px 25px;
-            word-wrap: break-word;
-            word-break: break-all;
         }
 
+        /* ===== এক্সপ্রেশন — ভিডিওর মতো এক লাইনে, বড় ও স্পষ্ট ===== */
         #expression {
             min-height: 60px;
             font-size: 50px;
             font-weight: 600;
+            white-space: nowrap;          /* কখনো ২ লাইনে ভাঙবে না */
+            overflow-x: auto;             /* লম্বা হলে পাশে সরবে */
+            overflow-y: hidden;
+            scrollbar-width: none;        /* স্ক্রলবার লুকানো */
+            -ms-overflow-style: none;
+            transition: font-size 0.1s ease;
         }
+        #expression::-webkit-scrollbar { display: none; }
+
         #result {
             min-height: 40px;
             font-size: 38px;
-            font-weight: 600;
-            color: var(--text-grey);
+            font-weight: 500;
+            color: #a6a8ae;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: font-size 0.1s ease;
         }
+        .cursor {
+            display: inline-block;
+            width: 3px;
+            height: .82em;
+            background: var(--orange);
+            margin-left: 3px;
+            vertical-align: -0.08em;
+            border-radius: 2px;
+            animation: blink 1.1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
 
         /* Button Grids */
         .buttons-container {
-            padding: 15px;
+            padding: 12px;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
         }
-
         .buttons {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
+            gap: 14px;
         }
-
         .scientific-buttons {
-            margin-bottom: 15px;
-            display: none; /* Initially hidden */
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+            display: none;
         }
 
-        /* ===== নিওমরফিক বাটন স্টাইল ===== */
+        /* ===== নিওমরফিক বাটন ===== */
         .btn {
             border: none;
             border-radius: 50%;
             color: var(--text-dark);
-            font-size: 28px;
-            font-weight: 700; /* মোটা ও গাঢ় লেখা */
+            font-size: 27px;
+            font-weight: 700;
             cursor: pointer;
             aspect-ratio: 1 / 1;
             display: flex;
@@ -129,31 +232,24 @@
             justify-content: center;
             transition: box-shadow 0.15s, transform 0.1s;
         }
-
-        /* সংখ্যার বাটন — প্রায় সাদা, নরম ছায়া */
+        .btn.s { font-size: 19px; }
         .btn-num {
             background: linear-gradient(145deg, #fdfdfe, #eceef2);
             box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.13),
                         -5px -5px 10px rgba(255, 255, 255, 0.95),
                         inset 0 1px 1px rgba(255, 255, 255, 0.9);
         }
-
-        /* ফাংশন/অপারেটর বাটন — একটু গাঢ় ধূসর */
         .btn-func {
             background: linear-gradient(145deg, #e3e5ea, #d3d5db);
             box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.13),
                         -5px -5px 10px rgba(255, 255, 255, 0.9),
                         inset 0 1px 1px rgba(255, 255, 255, 0.7);
         }
-
-        /* চাপলে বাটন ভেতরে চেপে যাবে */
         .btn:active {
             box-shadow: inset 4px 4px 10px rgba(0, 0, 0, 0.15),
                         inset -4px -4px 8px rgba(255, 255, 255, 0.7);
             transform: scale(0.96);
         }
-
-        /* = বাটন — কমলা গ্রেডিয়েন্ট */
         .btn.equals {
             background: linear-gradient(145deg, #ffab52, #ff8a00);
             color: #ffffff;
@@ -165,68 +261,279 @@
             box-shadow: inset 4px 4px 10px rgba(170, 90, 0, 0.45);
             transform: scale(0.96);
         }
+        .mode-on { color: var(--orange) !important; }
 
-        /* Full-screen Overlays */
+        /* ===== ৩ ডট ড্রপডাউন মেনু ===== */
+        .dropdown {
+            position: absolute;
+            top: 64px;
+            right: 14px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+            padding: 6px 0;
+            min-width: 185px;
+            z-index: 30;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px);
+            transition: .18s;
+        }
+        .dropdown.show { opacity: 1; visibility: visible; transform: none; }
+        .dd-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 18px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+        }
+        .dd-item:active { background: #f2f3f6; }
+        .dd-item i { width: 22px; text-align: center; color: #4a4b50; }
+
+        /* ===== ফুল-স্ক্রিন ওভারলে পেজ ===== */
         .overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg);
-            z-index: 10;
-            display: none;
+            inset: 0;
+            background: var(--bg);
+            z-index: 15;
+            display: flex;
             flex-direction: column;
-            padding: 15px;
-            box-sizing: border-box;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-14px);
+            transition: .22s;
         }
+        .overlay.open { opacity: 1; visibility: visible; transform: none; }
         .overlay-header {
             display: flex;
             align-items: center;
+            gap: 16px;
+            padding: 18px 16px;
             color: var(--text-dark);
-            font-size: 24px;
+            font-size: 21px;
             font-weight: 700;
-            padding: 15px;
         }
-        .overlay-header i { cursor: pointer; margin-right: 20px; }
+        .overlay-header i { cursor: pointer; font-size: 19px; color: #4a4b50; }
+        .overlay-header .h-right { margin-left: auto; cursor: pointer; }
         .overlay-content { flex: 1; overflow-y: auto; }
-        
-        /* Converter Styles */
-        #converter-panel .buttons {
+
+        /* ===== ইউনিট কনভার্টার ===== */
+        #convGrid {
+            display: grid;
             grid-template-columns: repeat(3, 1fr);
-            padding: 20px;
+            gap: 12px;
+            padding: 16px;
         }
-        .converter-btn {
-            border-radius: 20px;
+        .conv-card {
+            background: #fbfbfd;
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+            display: flex;
             flex-direction: column;
-            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            aspect-ratio: 1 / 1.05;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .conv-card:active { background: #f0f1f5; }
+        .conv-card i { font-size: 20px; }
+        .nums-badge {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: #2b2d33;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        #convDetail { padding: 18px; display: none; }
+        .conv-input {
+            width: 100%;
+            box-sizing: border-box;
+            border: none;
+            outline: none;
+            background: #fbfbfd;
+            border-radius: 16px;
+            box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.06), inset -2px -2px 6px #ffffff;
+            padding: 18px;
+            font-size: 26px;
+            font-weight: 700;
+            text-align: right;
+            color: var(--text-dark);
+            font-family: inherit;
+        }
+        .conv-selects { display: flex; gap: 10px; align-items: center; margin: 16px 0; }
+        .conv-selects select {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: #fbfbfd;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+        .swap-btn {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(145deg, #ffab52, #ff8a00);
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .conv-result {
+            min-height: 40px;
+            text-align: right;
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--text-grey);
+            word-break: break-all;
+        }
+        .conv-note {
+            display: none;
+            font-size: 12px;
+            color: #9a9ca2;
+            margin-top: 8px;
+        }
+
+        /* ===== হিস্ট্রি ===== */
+        #history-content { padding: 16px; }
+        .history-card {
+            background: #fbfbfd;
+            border-radius: 18px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+        .hc-expr {
+            font-size: 14.5px;
+            color: var(--text-grey);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .history-card.open .hc-expr {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-all;
+        }
+        .hc-res { font-size: 24px; font-weight: 800; color: var(--text-dark); margin-top: 4px; }
+        .hc-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+        .hc-date { font-size: 12px; color: #a6a8ae; }
+        .hc-more {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: #eceef2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--text-grey);
+            transition: .2s;
+        }
+        .history-card.open .hc-more i { transform: rotate(180deg); }
+        .no-history { color: #9a9ca2; text-align: center; margin-top: 60px; font-size: 17px; }
+
+        /* ===== সেটিংস ===== */
+        .settings-group {
+            background: #fbfbfd;
+            border-radius: 18px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 17px 18px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+        }
+        .settings-row + .settings-row { border-top: 1px solid #eceef2; }
+        .settings-row.col { flex-direction: column; align-items: flex-start; cursor: default; }
+        .chev { color: #b0b3ba; font-size: 14px; }
+        .sr-sub { font-size: 13.5px; color: #9a9ca2; font-weight: 500; margin-top: 3px; }
+
+        /* ===== ডায়ালগ ===== */
+        .dialog-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 80;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: .2s;
+        }
+        .dialog-backdrop.show { opacity: 1; visibility: visible; }
+        .dialog-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 22px;
+            width: 82%;
+            max-width: 340px;
+        }
+        .dialog-title { font-size: 18px; font-weight: 800; color: var(--text-dark); }
+        .dialog-body { margin-top: 10px; }
+        .dlg-text { font-size: 15px; line-height: 1.7; color: #3a3b40; }
+        .op-range { width: 100%; accent-color: var(--orange); margin: 14px 0 6px; }
+        .op-val { text-align: center; font-weight: 700; font-size: 18px; color: var(--text-dark); }
+        .dialog-ok {
+            margin-top: 18px;
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #ffab52, #ff8a00);
+            color: #fff;
             font-size: 16px;
             font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
         }
-        
-        /* History Styles */
-        #history-panel .history-item {
-            color: var(--text-dark);
-            padding: 15px;
-            border-bottom: 1px solid #d8dade;
-            text-align: right;
-        }
-        #history-panel .history-expr { font-size: 18px; color: var(--text-grey); }
-        #history-panel .history-res { font-size: 24px; font-weight: 700; }
-        #history-panel .no-history { color: #9a9ca2; text-align: center; margin-top: 50px; font-size: 18px; }
+
+        /* ফ্লোটিং উইন্ডোতে সাইজ ছোট */
+        .fw-mode .header { padding: 10px 12px; }
+        .fw-mode .buttons-container { padding: 10px; padding-bottom: 14px; }
+        .fw-mode .buttons { gap: 10px; }
+        .fw-mode .btn { font-size: 22px; }
+        .fw-mode .btn.s { font-size: 16px; }
+        .fw-mode .display-container { min-height: 80px; padding: 6px 18px; }
         /* CSS কোড শেষ */
     </style>
 </head>
 <body>
 
-    <div class="calculator-wrapper">
+    <div class="calculator-wrapper" id="appWrap">
         <!-- Main Calculator UI -->
         <div class="calculator-main">
             <div class="header">
-                <i class="fa-solid fa-expand" title="Floating Window"></i>
-                <span id="sci-btn" title="Scientific Mode">√π</span>
-                <i id="converter-btn" class="fa-solid fa-grip" title="Converter"></i>
-                <i id="history-btn" class="fa-regular fa-clock" title="History"></i>
+                <i id="fw-btn" class="fa-solid fa-down-left-and-up-right-to-center" title="Floating Window"></i>
+                <span id="sci-btn" title="Scientific Mode"><span id="sciL1">√π</span><span id="sciL2">e=</span></span>
+                <i id="converter-btn" class="fa-solid fa-table-cells-large" title="Unit Converter"></i>
+                <i id="menu-btn" class="fa-solid fa-ellipsis-vertical" title="Menu"></i>
             </div>
 
             <div class="display-container">
@@ -235,32 +542,23 @@
             </div>
 
             <div class="buttons-container">
-                <div id="scientific-panel" class="buttons scientific-buttons">
-                    <button class="btn btn-func" onclick="appendFunction('sin(')">sin</button>
-                    <button class="btn btn-func" onclick="appendFunction('cos(')">cos</button>
-                    <button class="btn btn-func" onclick="appendFunction('tan(')">tan</button>
-                    <button class="btn btn-func" onclick="appendCharacter('!')">n!</button>
-                    <button class="btn btn-func" onclick="appendCharacter('(')">(</button>
-                    <button class="btn btn-func" onclick="appendCharacter(')')">)</button>
-                    <button class="btn btn-func" onclick="appendCharacter('√(')">√</button>
-                    <button class="btn btn-func" onclick="appendCharacter('^')">^</button>
-                </div>
-                <div class="buttons">
+                <!-- সাধারণ মোড -->
+                <div id="normal-panel" class="buttons">
                     <button class="btn btn-func" onclick="clearDisplay()">AC</button>
                     <button class="btn btn-func" onclick="appendCharacter('%')">%</button>
-                    <button class="btn btn-func" onclick="deleteLast()">⌫</button>
+                    <button class="btn btn-func" onclick="deleteLast()"><i class="fa-solid fa-delete-left"></i></button>
                     <button class="btn btn-func" onclick="appendOperator('÷')">÷</button>
-                    
+
                     <button class="btn btn-num" onclick="appendCharacter('7')">7</button>
                     <button class="btn btn-num" onclick="appendCharacter('8')">8</button>
                     <button class="btn btn-num" onclick="appendCharacter('9')">9</button>
                     <button class="btn btn-func" onclick="appendOperator('×')">×</button>
-                    
+
                     <button class="btn btn-num" onclick="appendCharacter('4')">4</button>
                     <button class="btn btn-num" onclick="appendCharacter('5')">5</button>
                     <button class="btn btn-num" onclick="appendCharacter('6')">6</button>
                     <button class="btn btn-func" onclick="appendOperator('-')">−</button>
-                    
+
                     <button class="btn btn-num" onclick="appendCharacter('1')">1</button>
                     <button class="btn btn-num" onclick="appendCharacter('2')">2</button>
                     <button class="btn btn-num" onclick="appendCharacter('3')">3</button>
@@ -271,69 +569,151 @@
                     <button class="btn btn-num" onclick="appendCharacter('.')">.</button>
                     <button class="btn equals" onclick="finalizeResult()">=</button>
                 </div>
-            </div>
-        </div>
 
-        <!-- Converter Overlay -->
-        <div id="converter-panel" class="overlay">
-            <div class="overlay-header">
-                <i class="fa-solid fa-arrow-left" onclick="hideOverlay('converter-panel')"></i>
-                <span>Converter</span>
-            </div>
-            <div class="overlay-content">
-                <div class="buttons">
-                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-yen-sign"></i>Currency</button>
-                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-ruler-horizontal"></i>Length</button>
-                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-vector-square"></i>Area</button>
-                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-cube"></i>Volume</button>
-                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-weight-hanging"></i>Weight</button>
-                    <button class="btn btn-num converter-btn"><i class="fa-solid fa-temperature-half"></i>Temperature</button>
+                <!-- সায়েন্টিফিক মোড (৫ কলাম লেআউট) -->
+                <div id="scientific-panel" class="buttons scientific-buttons">
+                    <button class="btn btn-func s" id="bSin" onclick="sciFn('sin')">sin</button>
+                    <button class="btn btn-func s" id="bCos" onclick="sciFn('cos')">cos</button>
+                    <button class="btn btn-func s" id="bTan" onclick="sciFn('tan')">tan</button>
+                    <button class="btn btn-func s" id="bRad" onclick="setAngle(false)">rad</button>
+                    <button class="btn btn-func s" id="bDeg" onclick="setAngle(true)">deg</button>
+
+                    <button class="btn btn-func s" id="bLog" onclick="sciFn('log')">log</button>
+                    <button class="btn btn-func s" id="bLn" onclick="sciFn('ln')">ln</button>
+                    <button class="btn btn-func s" onclick="appendCharacter('(')">(</button>
+                    <button class="btn btn-func s" onclick="appendCharacter(')')">)</button>
+                    <button class="btn btn-func s" id="bInv" onclick="toggleInv()">inv</button>
+
+                    <button class="btn btn-func s" onclick="appendCharacter('!')">!</button>
+                    <button class="btn btn-func s" onclick="clearDisplay()">AC</button>
+                    <button class="btn btn-func s" onclick="appendCharacter('%')">%</button>
+                    <button class="btn btn-func s" onclick="deleteLast()"><i class="fa-solid fa-delete-left"></i></button>
+                    <button class="btn btn-func s" onclick="appendOperator('÷')">÷</button>
+
+                    <button class="btn btn-func s" onclick="appendCharacter('^')">^</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('7')">7</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('8')">8</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('9')">9</button>
+                    <button class="btn btn-func s" onclick="appendOperator('×')">×</button>
+
+                    <button class="btn btn-func s" id="bSqrt" onclick="sciFn('sqrt')">√</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('4')">4</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('5')">5</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('6')">6</button>
+                    <button class="btn btn-func s" onclick="appendOperator('-')">−</button>
+
+                    <button class="btn btn-func s" onclick="appendCharacter('π')">π</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('1')">1</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('2')">2</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('3')">3</button>
+                    <button class="btn btn-func s" onclick="appendOperator('+')">+</button>
+
+                    <button class="btn btn-func s" onclick="appendCharacter('e')">e</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('00')">00</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('0')">0</button>
+                    <button class="btn btn-num s" onclick="appendCharacter('.')">.</button>
+                    <button class="btn equals s" onclick="finalizeResult()">=</button>
                 </div>
             </div>
         </div>
-        
-        <!-- History Overlay -->
+
+        <!-- ফ্লোটিং উইন্ডোর উপরের ডট ও নিচের হাতল -->
+        <div id="fwTop">•••</div>
+        <div id="fwHandle"></div>
+
+        <!-- ৩ ডট মেনু -->
+        <div id="dropdown-menu" class="dropdown">
+            <div class="dd-item" id="ddHistory"><i class="fa-regular fa-clock"></i>History</div>
+            <div class="dd-item" id="ddSettings"><i class="fa-solid fa-gear"></i>Settings</div>
+        </div>
+
+        <!-- Unit Converter পেজ -->
+        <div id="converter-panel" class="overlay">
+            <div class="overlay-header">
+                <i class="fa-solid fa-arrow-left" onclick="backConv()"></i>
+                <span id="convTitle">Unit converter</span>
+            </div>
+            <div class="overlay-content">
+                <div id="convGrid">
+                    <button class="conv-card" onclick="openConv('currency')"><i class="fa-solid fa-yen-sign"></i>Currency</button>
+                    <button class="conv-card" onclick="openConv('length')"><i class="fa-solid fa-ruler-horizontal"></i>Length</button>
+                    <button class="conv-card" onclick="openConv('area')"><i class="fa-solid fa-vector-square"></i>Area</button>
+                    <button class="conv-card" onclick="openConv('volume')"><i class="fa-solid fa-cube"></i>Volume</button>
+                    <button class="conv-card" onclick="openConv('weight')"><i class="fa-solid fa-weight-hanging"></i>Weight</button>
+                    <button class="conv-card" onclick="openConv('temperature')"><i class="fa-solid fa-temperature-half"></i>Temperature</button>
+                    <button class="conv-card" onclick="openConv('speed')"><i class="fa-solid fa-gauge-high"></i>Speed</button>
+                    <button class="conv-card" onclick="openConv('pressure')"><i class="fa-solid fa-gauge-simple"></i>Pressure</button>
+                    <button class="conv-card" onclick="openConv('power')"><i class="fa-solid fa-bolt"></i>Power</button>
+                    <button class="conv-card" onclick="openConv('nums')"><span class="nums-badge">01</span>Number system</button>
+                </div>
+                <div id="convDetail">
+                    <input id="convInput" class="conv-input" type="text" inputmode="decimal" placeholder="0">
+                    <div class="conv-selects">
+                        <select id="selFrom"></select>
+                        <button class="swap-btn" onclick="swapConv()"><i class="fa-solid fa-right-left"></i></button>
+                        <select id="selTo"></select>
+                    </div>
+                    <div class="conv-result" id="convResult">—</div>
+                    <div class="conv-note" id="convNote">* আনুমানিক অফলাইন রেট</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History পেজ -->
         <div id="history-panel" class="overlay">
-             <div class="overlay-header">
-                <i class="fa-solid fa-arrow-left" onclick="hideOverlay('history-panel')"></i>
+            <div class="overlay-header">
+                <i class="fa-solid fa-arrow-left" onclick="closeOverlay('history-panel')"></i>
                 <span>History</span>
+                <i class="fa-regular fa-trash-can h-right" onclick="clearHistory()"></i>
             </div>
-            <div id="history-content" class="overlay-content">
-                <div class="no-history">No history yet</div>
+            <div id="history-content" class="overlay-content"></div>
+        </div>
+
+        <!-- Settings পেজ -->
+        <div id="settings-panel" class="overlay">
+            <div class="overlay-header">
+                <i class="fa-solid fa-arrow-left" onclick="closeOverlay('settings-panel')"></i>
+                <span>Settings</span>
             </div>
+            <div class="overlay-content" style="padding:16px;">
+                <div class="settings-group">
+                    <div class="settings-row" onclick="openTransDialog()">Floating window transparency <i class="fa-solid fa-chevron-right chev"></i></div>
+                </div>
+                <div class="settings-group">
+                    <div class="settings-row col"><div><div>Version</div><div class="sr-sub">16.4.2</div></div></div>
+                    <div class="settings-row" onclick="showAbout()">About Calculator <i class="fa-solid fa-chevron-right chev"></i></div>
+                    <div class="settings-row" onclick="showPrivacy()">Privacy <i class="fa-solid fa-chevron-right chev"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ফ্লোটিং উইন্ডোর পেছনের ব্যাকড্রপ -->
+    <div id="fw-backdrop"></div>
+
+    <!-- ডায়ালগ -->
+    <div id="dialogBack" class="dialog-backdrop" onclick="if(event.target===this)closeDialog()">
+        <div class="dialog-card">
+            <div id="dialogTitle" class="dialog-title"></div>
+            <div id="dialogBody" class="dialog-body"></div>
+            <button class="dialog-ok" onclick="closeDialog()">OK</button>
         </div>
     </div>
 
     <script>
         // JavaScript কোড শুরু
 
-        /* ===== কপি ও জুম সম্পূর্ণ বন্ধ করার কোড ===== */
-
-        // রাইট ক্লিক বন্ধ
+        /* ===== কপি ও জুম সম্পূর্ণ বন্ধ ===== */
         document.addEventListener('contextmenu', e => e.preventDefault());
-
-        // কপি, কাট, সিলেক্ট, ড্র্যাগ বন্ধ
         document.addEventListener('copy', e => e.preventDefault());
         document.addEventListener('cut', e => e.preventDefault());
-        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('selectstart', e => { if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') e.preventDefault(); });
         document.addEventListener('dragstart', e => e.preventDefault());
-
-        // পিঞ্চ জুম বন্ধ (iOS Safari)
         document.addEventListener('gesturestart', e => e.preventDefault());
         document.addEventListener('gesturechange', e => e.preventDefault());
         document.addEventListener('gestureend', e => e.preventDefault());
-
-        // মাল্টি-টাচ জুম বন্ধ
-        document.addEventListener('touchmove', e => {
-            if (e.touches.length > 1) e.preventDefault();
-        }, { passive: false });
-
-        // Ctrl + মাউস স্ক্রল জুম বন্ধ
-        document.addEventListener('wheel', e => {
-            if (e.ctrlKey) e.preventDefault();
-        }, { passive: false });
-
-        // কীবোর্ড শর্টকাট বন্ধ
+        document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+        document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
         document.addEventListener('keydown', e => {
             const k = e.key.toLowerCase();
             if (e.ctrlKey && ['c', 'x', 's', 'u', 'p', '+', '-', '=', '0'].includes(k)) e.preventDefault();
@@ -341,131 +721,424 @@
             if (e.key === 'F12') e.preventDefault();
         });
 
-        /* ===== ক্যালকুলেটর লজিক ===== */
-
+        /* ===== এলিমেন্ট রেফারেন্স ===== */
+        const appWrap = document.getElementById('appWrap');
         const expressionDiv = document.getElementById('expression');
         const resultDiv = document.getElementById('result');
         const sciPanel = document.getElementById('scientific-panel');
-        const history = [];
+        const normalPanel = document.getElementById('normal-panel');
+        const sciBtn = document.getElementById('sci-btn');
+        const sciL1 = document.getElementById('sciL1');
+        const sciL2 = document.getElementById('sciL2');
+        const fwBtn = document.getElementById('fw-btn');
+        const fwBackdrop = document.getElementById('fw-backdrop');
+        const fwTop = document.getElementById('fwTop');
+        const fwHandle = document.getElementById('fwHandle');
+        const ddMenu = document.getElementById('dropdown-menu');
+        const convTitle = document.getElementById('convTitle');
+        const convGrid = document.getElementById('convGrid');
+        const convDetail = document.getElementById('convDetail');
+        const convInput = document.getElementById('convInput');
+        const convResult = document.getElementById('convResult');
+        const convNote = document.getElementById('convNote');
+        const selFrom = document.getElementById('selFrom');
+        const selTo = document.getElementById('selTo');
 
+        /* ===== স্টেট ===== */
+        let currentExpression = '';
         let isFinalized = false;
+        let sciActive = false;
+        let degMode = false;
+        let invMode = false;
+        let curConv = null;
+        let fwOp = +(localStorage.getItem('fwOp') || 100);
+        document.documentElement.style.setProperty('--fw-op', fwOp / 100);
 
-        // --- Core Calculator Logic ---
+        let history = [];
+        try { history = JSON.parse(localStorage.getItem('proCalcHistory') || '[]'); } catch (e) { history = []; }
+        function saveHistory() { localStorage.setItem('proCalcHistory', JSON.stringify(history.slice(0, 50))); }
+
+        /* ===== ফরম্যাটিং হেল্পার ===== */
+        function addCommas(s) {
+            return s.replace(/\d+(?:\.\d+)?/g, m => {
+                const p = m.split('.');
+                p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                return p.join('.');
+            });
+        }
+        function fmtNum(n) {
+            const v = parseFloat(n.toPrecision(15));
+            if (!Number.isFinite(v)) return '';
+            if (Math.abs(v) >= 1e15) return v.toExponential(6);
+            return v.toLocaleString('en-US', { maximumFractionDigits: 10 });
+        }
+        function fmtConv(x) {
+            const v = parseFloat(x.toPrecision(10));
+            return v.toLocaleString('en-US', { maximumFractionDigits: 8 });
+        }
+        function factorial(n) {
+            if (n < 0 || !Number.isInteger(n)) return NaN;
+            if (n === 0) return 1;
+            let r = 1;
+            for (let i = 2; i <= n; i++) r *= i;
+            return r;
+        }
+
+        /* ===== ডিগ্রি/রেডিয়ান সচেতন ট্রিগ ফাংশন ===== */
+        const TRIG = {
+            sin: x => Math.sin(degMode ? x * Math.PI / 180 : x),
+            cos: x => Math.cos(degMode ? x * Math.PI / 180 : x),
+            tan: x => Math.tan(degMode ? x * Math.PI / 180 : x),
+            asin: x => degMode ? Math.asin(x) * 180 / Math.PI : Math.asin(x),
+            acos: x => degMode ? Math.acos(x) * 180 / Math.PI : Math.acos(x),
+            atan: x => degMode ? Math.atan(x) * 180 / Math.PI : Math.atan(x)
+        };
+
+        /* ===== এক্সপ্রেশন ক্যালকুলেটর ===== */
+        function calcExpression(expr) {
+            let f = expr.replace(/×/g, '*').replace(/÷/g, '/');
+            f = f.replace(/e/g, '(Math.E)');
+            f = f.replace(/π/g, '(Math.PI)');
+            f = f.replace(/√\(/g, 'sqrt(');
+            f = f.replace(/(\d+(?:\.\d+)?)!/g, (m, n) => factorial(parseFloat(n)));
+            f = f.replace(/\^/g, '**');
+            f = f.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
+            const fn = new Function('sin','cos','tan','asin','acos','atan','log','ln','sqrt',
+                '"use strict";return (' + f + ')');
+            return fn(TRIG.sin, TRIG.cos, TRIG.tan, TRIG.asin, TRIG.acos, TRIG.atan,
+                      Math.log10, Math.log, Math.sqrt);
+        }
+
+        /* ===== ডিসপ্লে অটো রিসাইজ (ভিডিওর মতো: লেখা বড় ও স্পষ্ট থাকবে, লম্বা হলে শেষ অংশ দেখাবে) ===== */
+        function fitDisplay() {
+            const sc = appWrap.classList.contains('fw-mode') ? 0.72 : 1;
+
+            // এক্সপ্রেশন: ৯ অক্ষর পর্যন্ত 50px, তারপর ধীরে ছোট — তবে সর্বনিম্ন 30px-এর নিচে নামবে না
+            const el = currentExpression.length;
+            const es = el <= 9 ? 50 : Math.max(30, 50 - (el - 9) * 2.2);
+            expressionDiv.style.fontSize = (es * sc) + 'px';
+
+            // রেজাল্ট: সবসময় পুরোটা দেখা যাবে
+            const rl = resultDiv.innerText.length;
+            const rs = rl <= 9 ? 38 : Math.max(18, 38 - (rl - 9) * 2);
+            resultDiv.style.fontSize = (rs * sc) + 'px';
+
+            // লম্বা এক্সপ্রেশন হলে সবশেষে লেখা অংশ ও কার্সার দেখাবে (ভিডিওর মতো)
+            expressionDiv.scrollLeft = expressionDiv.scrollWidth;
+        }
+
+        /* ===== লাইভ রেজাল্ট ===== */
         function updateLiveResult() {
-            let expression = expressionDiv.innerText;
-            if (!expression || isNaN(expression.slice(-1)) && expression.slice(-1) !== '.' && expression.slice(-1) !== ')') {
-                resultDiv.innerText = ''; return;
-            }
+            fitDisplay();
+            let t = currentExpression;
+            if (!t) { resultDiv.innerText = ''; return; }
+            while (/[+\-×÷]$/.test(t)) t = t.slice(0, -1);
+            if (!t) { resultDiv.innerText = ''; return; }
+            const last = t.slice(-1);
+            if (!/[0-9.)!%πe]/.test(last)) { resultDiv.innerText = ''; return; }
+            const hasOp = /[+\-×÷*/^!%(]/.test(t) || /[a-z√π]/i.test(t);
+            if (!hasOp) { resultDiv.innerText = ''; return; }
             try {
-                let evalExpression = formatExpressionForEval(expression);
-                const result = new Function('return ' + evalExpression)();
-                resultDiv.innerText = Number.isFinite(result) ? formatResult(result) : '';
-            } catch (error) { resultDiv.innerText = ''; }
+                const r = calcExpression(t);
+                resultDiv.innerText = Number.isFinite(r) ? fmtNum(r) : '';
+            } catch (e) { resultDiv.innerText = ''; }
         }
-        
-        function finalizeResult() {
-            if (resultDiv.innerText) {
-                const expr = expressionDiv.innerText;
-                const res = resultDiv.innerText;
-                history.unshift({ expression: expr, result: res }); // Add to history
-                expressionDiv.innerText = res;
-                resultDiv.innerText = '';
-                isFinalized = true;
-            }
-        }
-        
-        // --- Button Actions ---
-        function appendCharacter(char) {
-            if (isFinalized) { expressionDiv.innerText = ''; isFinalized = false; }
-            expressionDiv.innerText += char;
+
+        /* ===== রেন্ডার (কমা + কমলা কার্সার সহ) ===== */
+        function render() {
+            expressionDiv.innerHTML = currentExpression
+                ? addCommas(currentExpression) + '<span class="cursor"></span>'
+                : '';
             updateLiveResult();
         }
 
-        function appendOperator(op) {
-            if (isFinalized) { expressionDiv.innerText = resultDiv.innerText; isFinalized = false; }
-            const lastChar = expressionDiv.innerText.slice(-1);
-            if (['+', '-', '×', '÷'].includes(lastChar)) {
-                expressionDiv.innerText = expressionDiv.innerText.slice(0, -1);
-            }
-            expressionDiv.innerText += op;
-            resultDiv.innerText = '';
+        /* ===== বাটন অ্যাকশন ===== */
+        function appendCharacter(char) {
+            if (isFinalized) { currentExpression = ''; isFinalized = false; }
+            currentExpression += char;
+            render();
         }
-        
         function appendFunction(func) {
-            if (isFinalized) { expressionDiv.innerText = ''; isFinalized = false; }
-            expressionDiv.innerText += func;
+            if (isFinalized) { currentExpression = ''; isFinalized = false; }
+            currentExpression += func;
+            render();
         }
-
+        function appendOperator(op) {
+            isFinalized = false;
+            const last = currentExpression.slice(-1);
+            if (['+', '-', '×', '÷'].includes(last)) currentExpression = currentExpression.slice(0, -1);
+            currentExpression += op;
+            render();
+        }
         function clearDisplay() {
-            expressionDiv.innerText = ''; resultDiv.innerText = ''; isFinalized = false;
+            currentExpression = ''; isFinalized = false;
+            render();
         }
-
         function deleteLast() {
             if (isFinalized) { clearDisplay(); return; }
-            expressionDiv.innerText = expressionDiv.innerText.slice(0, -1);
-            updateLiveResult();
+            currentExpression = currentExpression.slice(0, -1);
+            render();
+        }
+        function finalizeResult() {
+            const resText = resultDiv.innerText;
+            if (!resText) return;
+            const raw = parseFloat(resText.replace(/,/g, ''));
+            const d = new Date();
+            const dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '/' + String(d.getFullYear()).slice(2);
+            history.unshift({ e: currentExpression, r: resText, d: dateStr });
+            saveHistory();
+            currentExpression = String(raw);
+            resultDiv.innerText = '';
+            isFinalized = true;
+            render();
         }
 
-        // --- UI Toggles ---
-        document.getElementById('sci-btn').onclick = () => {
-            sciPanel.style.display = (sciPanel.style.display === 'grid') ? 'none' : 'grid';
-        };
-        
-        document.getElementById('converter-btn').onclick = () => showOverlay('converter-panel');
-        document.getElementById('history-btn').onclick = () => {
-            renderHistory();
-            showOverlay('history-panel');
+        /* ===== সায়েন্টিফিক বাটন ===== */
+        function sciFn(name) {
+            if (invMode) {
+                if (name === 'sin') return appendCharacter('asin(');
+                if (name === 'cos') return appendCharacter('acos(');
+                if (name === 'tan') return appendCharacter('atan(');
+                if (name === 'log') return appendCharacter('10^(');
+                if (name === 'ln') return appendCharacter('e^(');
+                if (name === 'sqrt') return appendCharacter('^2');
+            }
+            if (name === 'sqrt') return appendCharacter('√(');
+            appendFunction(name + '(');
+        }
+        function setAngle(d) {
+            degMode = d;
+            document.getElementById('bRad').classList.toggle('mode-on', !d);
+            document.getElementById('bDeg').classList.toggle('mode-on', d);
+        }
+        function toggleInv() {
+            invMode = !invMode;
+            document.getElementById('bInv').classList.toggle('mode-on', invMode);
+            document.getElementById('bSin').innerText = invMode ? 'sin⁻¹' : 'sin';
+            document.getElementById('bCos').innerText = invMode ? 'cos⁻¹' : 'cos';
+            document.getElementById('bTan').innerText = invMode ? 'tan⁻¹' : 'tan';
+            document.getElementById('bLog').innerText = invMode ? '10ˣ' : 'log';
+            document.getElementById('bLn').innerText = invMode ? 'eˣ' : 'ln';
+            document.getElementById('bSqrt').innerText = invMode ? 'x²' : '√';
+        }
+
+        /* ===== সায়েন্টিফিক মোড টগল ===== */
+        sciBtn.onclick = () => {
+            sciActive = !sciActive;
+            sciPanel.style.display = sciActive ? 'grid' : 'none';
+            normalPanel.style.display = sciActive ? 'none' : 'grid';
+            sciBtn.classList.toggle('active', sciActive);
+            sciL1.innerText = sciActive ? 'x=' : '√π';
+            sciL2.innerText = sciActive ? '=' : 'e=';
         };
 
-        function showOverlay(panelId) { document.getElementById(panelId).style.display = 'flex'; }
-        function hideOverlay(panelId) { document.getElementById(panelId).style.display = 'none'; }
-        
-        // --- History Logic ---
+        /* ===== ফ্লোটিং উইন্ডো ===== */
+        function enterFW() {
+            appWrap.classList.add('fw-mode');
+            fwBtn.classList.replace('fa-down-left-and-up-right-to-center', 'fa-up-right-and-down-left-from-center');
+            fwBackdrop.classList.add('show');
+        }
+        function exitFW() {
+            appWrap.classList.remove('fw-mode');
+            fwBtn.classList.replace('fa-up-right-and-down-left-from-center', 'fa-down-left-and-up-right-to-center');
+            fwBackdrop.classList.remove('show');
+            appWrap.style.left = ''; appWrap.style.top = ''; appWrap.style.transform = '';
+        }
+        fwBtn.onclick = () => appWrap.classList.contains('fw-mode') ? exitFW() : enterFW();
+        fwBackdrop.onclick = exitFW;
+
+        let fwDrag = null, fwMoved = false;
+        function fwStartDrag(e) {
+            if (!appWrap.classList.contains('fw-mode')) return;
+            const r = appWrap.getBoundingClientRect();
+            appWrap.style.transform = 'none';
+            appWrap.style.left = r.left + 'px';
+            appWrap.style.top = r.top + 'px';
+            fwDrag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+            fwMoved = false;
+            e.preventDefault();
+        }
+        fwTop.addEventListener('pointerdown', fwStartDrag);
+        fwHandle.addEventListener('pointerdown', fwStartDrag);
+        window.addEventListener('pointermove', e => {
+            if (!fwDrag) return;
+            const nx = Math.min(Math.max(0, e.clientX - fwDrag.dx), window.innerWidth - appWrap.offsetWidth);
+            const ny = Math.min(Math.max(0, e.clientY - fwDrag.dy), window.innerHeight - appWrap.offsetHeight);
+            if (Math.abs(nx - parseFloat(appWrap.style.left)) > 3 || Math.abs(ny - parseFloat(appWrap.style.top)) > 3) fwMoved = true;
+            appWrap.style.left = nx + 'px';
+            appWrap.style.top = ny + 'px';
+        });
+        window.addEventListener('pointerup', () => fwDrag = null);
+        fwTop.addEventListener('click', () => { if (!fwMoved) exitFW(); });
+
+        /* ===== ৩ ডট মেনু ===== */
+        document.getElementById('menu-btn').addEventListener('click', e => {
+            e.stopPropagation();
+            ddMenu.classList.toggle('show');
+        });
+        document.addEventListener('click', e => {
+            if (!ddMenu.contains(e.target)) ddMenu.classList.remove('show');
+        });
+        document.getElementById('ddHistory').onclick = () => {
+            ddMenu.classList.remove('show');
+            renderHistory();
+            openOverlay('history-panel');
+        };
+        document.getElementById('ddSettings').onclick = () => {
+            ddMenu.classList.remove('show');
+            openOverlay('settings-panel');
+        };
+
+        /* ===== ওভারলে ওপেন/ক্লোজ ===== */
+        function openOverlay(id) { document.getElementById(id).classList.add('open'); }
+        function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+
+        /* ===== ইউনিট কনভার্টার ডেটা ===== */
+        const CONV = {
+            length: { t: 'Length', u: { 'Meter': 1, 'Kilometer': 1000, 'Centimeter': 0.01, 'Millimeter': 0.001, 'Mile': 1609.344, 'Yard': 0.9144, 'Foot': 0.3048, 'Inch': 0.0254 } },
+            area: { t: 'Area', u: { 'Square Meter': 1, 'Square Kilometer': 1e6, 'Square Centimeter': 1e-4, 'Hectare': 1e4, 'Acre': 4046.8564, 'Square Foot': 0.092903 } },
+            volume: { t: 'Volume', u: { 'Liter': 1, 'Milliliter': 0.001, 'Cubic Meter': 1000, 'Cubic Centimeter': 0.001, 'Gallon (US)': 3.785412, 'Quart (US)': 0.946353, 'Pint (US)': 0.473176, 'Cup (US)': 0.236588, 'Fluid Ounce': 0.029574 } },
+            weight: { t: 'Weight', u: { 'Kilogram': 1, 'Gram': 0.001, 'Milligram': 1e-6, 'Metric Ton': 1000, 'Pound': 0.453592, 'Ounce': 0.02835 } },
+            temperature: { t: 'Temperature', special: 'temp', u: ['Celsius °C', 'Fahrenheit °F', 'Kelvin K'] },
+            speed: { t: 'Speed', u: { 'Meters/second': 1, 'Kilometers/hour': 0.277778, 'Miles/hour': 0.44704, 'Knot': 0.514444, 'Feet/second': 0.3048 } },
+            pressure: { t: 'Pressure', u: { 'Pascal': 1, 'Kilopascal': 1000, 'Bar': 100000, 'ATM': 101325, 'mmHg': 133.322, 'PSI': 6894.757 } },
+            power: { t: 'Power', u: { 'Watt': 1, 'Kilowatt': 1000, 'Megawatt': 1e6, 'Horsepower': 745.699 } },
+            currency: { t: 'Currency', note: 1, u: { 'USD $': 1, 'BDT ৳': 118, 'EUR €': 0.92, 'GBP £': 0.79, 'INR ₹': 84, 'JPY ¥': 152, 'CNY ¥': 7.25, 'SAR ﷼': 3.75, 'AED د.إ': 3.67, 'MYR RM': 4.70 } },
+            nums: { t: 'Number system', special: 'num', u: ['DEC', 'BIN', 'OCT', 'HEX'] }
+        };
+
+        function fillSelect(sel, names) {
+            sel.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
+        }
+        document.getElementById('converter-btn').onclick = () => {
+            convDetail.style.display = 'none';
+            convGrid.style.display = 'grid';
+            convTitle.innerText = 'Unit converter';
+            openOverlay('converter-panel');
+        };
+        function openConv(key) {
+            curConv = key;
+            const c = CONV[key];
+            convTitle.innerText = c.t;
+            convGrid.style.display = 'none';
+            convDetail.style.display = 'block';
+            convNote.style.display = c.note ? 'block' : 'none';
+            const names = Array.isArray(c.u) ? c.u : Object.keys(c.u);
+            fillSelect(selFrom, names);
+            fillSelect(selTo, names);
+            selFrom.selectedIndex = 0;
+            selTo.selectedIndex = Math.min(1, names.length - 1);
+            convInput.value = '';
+            convCalc();
+        }
+        function backConv() {
+            if (convDetail.style.display === 'block') {
+                convDetail.style.display = 'none';
+                convGrid.style.display = 'grid';
+                convTitle.innerText = 'Unit converter';
+            } else closeOverlay('converter-panel');
+        }
+        function swapConv() {
+            const a = selFrom.selectedIndex;
+            selFrom.selectedIndex = selTo.selectedIndex;
+            selTo.selectedIndex = a;
+            convCalc();
+        }
+        function convCalc() {
+            const c = CONV[curConv];
+            if (!c) return;
+            const from = selFrom.value, to = selTo.value;
+            const raw = convInput.value.trim();
+            let out = '—';
+            if (raw !== '') {
+                if (c.special === 'temp') {
+                    const v = parseFloat(raw);
+                    if (!isNaN(v)) {
+                        const cv = from[0] === 'C' ? v : from[0] === 'F' ? (v - 32) * 5 / 9 : v - 273.15;
+                        const r = to[0] === 'C' ? cv : to[0] === 'F' ? cv * 9 / 5 + 32 : cv + 273.15;
+                        out = fmtConv(r);
+                    }
+                } else if (c.special === 'num') {
+                    const B = { DEC: 10, BIN: 2, OCT: 8, HEX: 16 };
+                    const r = parseInt(raw, B[from]);
+                    if (!isNaN(r)) out = r.toString(B[to]).toUpperCase();
+                } else {
+                    const v = parseFloat(raw);
+                    if (!isNaN(v)) out = fmtConv(v * c.u[from] / c.u[to]);
+                }
+            }
+            convResult.innerText = out;
+        }
+        convInput.addEventListener('input', convCalc);
+        selFrom.addEventListener('change', convCalc);
+        selTo.addEventListener('change', convCalc);
+
+        /* ===== হিস্ট্রি ===== */
         function renderHistory() {
-            const contentDiv = document.getElementById('history-content');
-            if (history.length === 0) {
-                contentDiv.innerHTML = '<div class="no-history">No history yet</div>';
+            const list = document.getElementById('history-content');
+            if (!history.length) {
+                list.innerHTML = '<div class="no-history">No history yet</div>';
                 return;
             }
-            contentDiv.innerHTML = '';
-            history.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'history-item';
-                div.innerHTML = `<div class="history-expr">${item.expression}</div><div class="history-res">${item.result}</div>`;
-                contentDiv.appendChild(div);
-            });
+            list.innerHTML = history.map((it, i) => `
+                <div class="history-card" onclick="loadHist(${i})">
+                    <div class="hc-expr">${addCommas(it.e)}</div>
+                    <div class="hc-res">${it.r}</div>
+                    <div class="hc-bottom">
+                        <span class="hc-date">${it.d}</span>
+                        <span class="hc-more" onclick="event.stopPropagation();toggleCard(this)"><i class="fa-solid fa-chevron-down"></i></span>
+                    </div>
+                </div>`).join('');
         }
-        
-        // --- Helper Functions ---
-        function formatExpressionForEval(expr) {
-            let formatted = expr.replace(/×/g, '*').replace(/÷/g, '/');
-            formatted = formatted.replace(/√\(/g, 'Math.sqrt(');
-            formatted = formatted.replace(/(\d+)!/g, (match, n) => factorial(parseInt(n)));
-            formatted = formatted.replace(/\^/g, '**');
-            // Handle percentage logic
-            formatted = formatted.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
-            // Handle trig functions
-            ['sin', 'cos', 'tan'].forEach(f => {
-                const regex = new RegExp(`${f}\\(`, 'g');
-                formatted = formatted.replace(regex, `Math.${f}(`);
-            });
-            return formatted;
+        function loadHist(i) {
+            currentExpression = history[i].r.replace(/,/g, '');
+            isFinalized = false;
+            closeOverlay('history-panel');
+            render();
         }
-        
-        function factorial(n) {
-            if (n < 0) return NaN;
-            if (n === 0) return 1;
-            let result = 1;
-            for (let i = 2; i <= n; i++) result *= i;
-            return result;
+        function toggleCard(el) {
+            el.closest('.history-card').classList.toggle('open');
+        }
+        function clearHistory() {
+            if (!history.length) return;
+            if (confirm('সব হিস্ট্রি মুছে ফেলবেন?')) {
+                history = [];
+                saveHistory();
+                renderHistory();
+            }
         }
 
-        function formatResult(num) {
-            // Avoids floating point inaccuracies like 0.1 + 0.2
-            return parseFloat(num.toPrecision(15));
+        /* ===== সেটিংস ও ডায়ালগ ===== */
+        function showDialog(title, html) {
+            document.getElementById('dialogTitle').innerText = title;
+            document.getElementById('dialogBody').innerHTML = html;
+            document.getElementById('dialogBack').classList.add('show');
+        }
+        function closeDialog() { document.getElementById('dialogBack').classList.remove('show'); }
+        function setFwOp(v) {
+            fwOp = +v;
+            localStorage.setItem('fwOp', fwOp);
+            document.documentElement.style.setProperty('--fw-op', fwOp / 100);
+            const el = document.getElementById('opVal');
+            if (el) el.innerText = fwOp + '%';
+        }
+        function openTransDialog() {
+            showDialog('Floating window transparency',
+                `<input type="range" min="50" max="100" step="5" value="${fwOp}" class="op-range" oninput="setFwOp(this.value)"><div class="op-val" id="opVal">${fwOp}%</div>`);
+        }
+        function showAbout() {
+            showDialog('About Calculator', '<div class="dlg-text">প্রো ক্যালকুলেটর<br>ভার্সন 16.4.2<br><br>নিওমরফিক ডিজাইনের আধুনিক ক্যালকুলেটর — সায়েন্টিফিক মোড, ইউনিট কনভার্টার, হিস্ট্রি ও ফ্লোটিং উইন্ডো সহ।</div>');
+        }
+        function showPrivacy() {
+            showDialog('Privacy', '<div class="dlg-text">আপনার প্রাইভেসি গুরুত্বপূর্ণ। এই অ্যাপ কোনো ব্যক্তিগত তথ্য সংগ্রহ, সংরক্ষণ বা শেয়ার করে না। আপনার সব হিসাব ও হিস্ট্রি শুধুমাত্র আপনার ডিভাইসেই থাকে।</div>');
         }
 
-        /* ===== Service Worker রেজিস্ট্রেশন (অফলাইন মোড) ===== */
+        /* ===== ইনিশিয়ালাইজ ===== */
+        setAngle(false);
+        render();
+        renderHistory();
+
+        /* ===== Service Worker (অফলাইন মোড) ===== */
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
